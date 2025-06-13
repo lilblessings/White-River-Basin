@@ -116,9 +116,9 @@ const DamList = ({ dams, isLoading, error }: DamListProps) => {
     const blueLevel = parseFloat(dam.blueLevel);
     const waterLevel = parseFloat(dam.data[0]?.waterLevel || "0");
 
-    if (waterLevel >= redLevel) return "red";
-    if (waterLevel >= orangeLevel) return "orange";
-    if (waterLevel >= blueLevel) return "blue";
+    if (waterLevel >= redLevel) return "Flood Stage";
+    if (waterLevel >= orangeLevel) return "Elevated";
+    if (waterLevel >= blueLevel) return "Normal";
     return "normal";
   };
 
