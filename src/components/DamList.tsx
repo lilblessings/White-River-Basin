@@ -116,25 +116,24 @@ const DamList = ({ dams, isLoading, error }: DamListProps) => {
     const blueLevel = parseFloat(dam.blueLevel);
     const waterLevel = parseFloat(dam.data[0]?.waterLevel || "0");
 
-    if (waterLevel >= redLevel) return "Flood Stage";
-    if (waterLevel >= orangeLevel) return "Elevated";
-    if (waterLevel >= blueLevel) return "Normal";
+    if (waterLevel >= redLevel) return "red";
+    if (waterLevel >= orangeLevel) return "orange";
+    if (waterLevel >= blueLevel) return "blue";
     return "normal";
   };
 
-  const getAlertStyles = (alertStatus: string) => {
-    switch (alertStatus) {
-      case "red":
-        return "border-l-4 border-red-500 relative bg-red-500/5 hover:bg-red-500/10 hover:border-red-600 transition-colors duration-300";
-      case "orange":
-        return "border-l-4 border-orange-500 relative bg-orange-500/5 hover:bg-orange-500/10 hover:border-orange-600 transition-colors duration-300";
-      case "blue":
-        return "border-l-4 border-blue-500 relative bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-600 transition-colors duration-300";
-      default:
-        return "border-l-4 border-zinc-600 relative bg-zinc-600/5 hover:bg-zinc-600/10 hover:border-zinc-700 transition-colors duration-300";
-    }
-  };
-
+  const getAlertLabel = (alertStatus: string) => {
+  switch (alertStatus) {
+    case "red":
+      return { text: "ALERT", bgClass: "bg-gradient-to-r from-red-500 to-red-600 w-[90px] text-xs tracking-widest shadow-sm shadow-red-500/20" };
+    case "orange":
+      return { text: "ELEVATED", bgClass: "bg-gradient-to-r from-orange-500 to-orange-600 w-[90px] text-xs tracking-widest shadow-sm shadow-orange-500/20" };
+    case "blue":
+      return { text: "NORMAL", bgClass: "bg-gradient-to-r from-blue-500 to-blue-600 w-[90px] text-xs tracking-widest shadow-sm shadow-blue-500/20" };
+    default:
+      return { text: "NORMAL", bgClass: "bg-gradient-to-r from-zinc-600 to-zinc-700 w-[90px] text-xs tracking-widest shadow-sm shadow-zinc-600/20" };
+  }
+};
   const getAlertLabel = (alertStatus: string) => {
     switch (alertStatus) {
       case "red":
