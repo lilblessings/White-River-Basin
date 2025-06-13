@@ -67,7 +67,15 @@ const formatUnits: Record<string, string> = {
 };
 
 const formatValue = (value: string | undefined, property: string) => {
-  const numValue = parseFloat(value || "");
+  if (!value) return property === "name" ? value : "N/A";
+  
+  // For numbers that already have commas (like liveStorage), keep them as-is
+  if (property === "liveStorage" && value.includes(',')) {
+    return `${value}${formatUnits[property] || ""}`;
+  }
+  
+  // For other numeric values, parse and format normally
+  const numValue = parseFloat((value || "").replace(/,/g, ""));
   return typeof numValue === "number" && !isNaN(numValue)
     ? `${numValue.toFixed(2)}${formatUnits[property] || ""}`
     : property === "name"
