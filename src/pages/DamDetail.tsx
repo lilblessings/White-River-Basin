@@ -96,10 +96,10 @@ const DamDetail = () => {
 
       setReferenceDate(mostRecentDate);
       const defaultRange = {
-        from: startOfDay(addMonths(mostRecentDate, -6)),
-        to: startOfDay(mostRecentDate)
-      };
-      setDateRange(defaultRange);
+  from: addHours(startOfHour(mostRecentDate), -12), // Changed to 12 hours
+  to: mostRecentDate
+};
+setDateRange(defaultRange);
     }
   }, [damData?.data]);
 
