@@ -70,12 +70,8 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
   const safeCurrentIndex = Math.max(0, Math.min(currentIndex, validData.length - 1));
   const currentData = validData[safeCurrentIndex] || validData[validData.length - 1];
   
-  // Check if this is a river (has type: 'river') or dam (default)
-  const isRiver = damData?.type === 'river';
-  
   const waterLevel = parseFloat(currentData?.storagePercentage || "0");
   const hasRainfall = parseFloat(currentData?.rainfall || "0") > 0;
-  const flowRate = parseFloat(currentData?.totalOutflow || currentData?.inflow || "0");
 
   // Determine if we're showing hourly data
   const isHourlyData = validData.some(item => item.time);
@@ -235,14 +231,15 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
                 <stop offset="100%" stopColor="hsl(var(--dam-water))" stopOpacity={0.5} />
               </linearGradient>
 
-              <linearGradient id="river-gradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#4A90E2" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#2171B5" stopOpacity="0.9" />
-              </linearGradient>
-
               <radialGradient id="star-glow" cx="0.5" cy="0.5" r="0.5">
                 <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.3" />
                 <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+              </radialGradient>
+
+              <radialGradient id="buoy-light-glow" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0%" stopColor="#FF0000" stopOpacity="1" />
+                <stop offset="40%" stopColor="#FF0000" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#FF0000" stopOpacity="0" />
               </radialGradient>
 
               <path id="cloud-path"
@@ -253,19 +250,6 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
                    h-20
                    a10 10 0 0 1 0 -16
                    z" />
-
-              {/* River flow pattern */}
-              <pattern id="river-flow" x="0" y="0" width="40" height="20" patternUnits="userSpaceOnUse">
-                <motion.path
-                  d="M0,10 Q10,5 20,10 T40,10"
-                  stroke="#ffffff"
-                  strokeWidth="1"
-                  fill="none"
-                  opacity="0.3"
-                  animate={{ x: [0, 40] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                />
-              </pattern>
             </defs>
 
             {/* Sky bg */}
@@ -434,240 +418,403 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
               )}
             </AnimatePresence>
 
-            {/* Main content area */}
-            <g transform="translate(150,100)">
-              {isRiver ? (
-                // RIVER VISUALIZATION
-                <>
-                  {/* River banks */}
-                  <path
-                    d="M0,200 Q150,180 300,200 T600,200 L600,250 Q450,270 300,250 Q150,230 0,250 Z"
-                    fill="#8B4513"
-                    opacity="0.8"
-                  />
-                  <path
-                    d="M0,150 Q150,130 300,150 T600,150 L600,200 Q450,180 300,200 Q150,180 0,200 Z"
-                    fill="#8B4513"
-                    opacity="0.8"
-                  />
-
-                  {/* River water with flow animation */}
-                  <motion.path
-                    d="M0,200 Q150,180 300,200 T600,200 L600,250 Q450,230 300,250 Q150,230 0,250 Z"
-                    fill="url(#river-gradient)"
-                    animate={{
-                      d: [
-                        "M0,200 Q150,180 300,200 T600,200 L600,250 Q450,230 300,250 Q150,230 0,250 Z",
-                        "M0,195 Q150,175 300,195 T600,195 L600,245 Q450,225 300,245 Q150,225 0,245 Z",
-                        "M0,200 Q150,180 300,200 T600,200 L600,250 Q450,230 300,250 Q150,230 0,250 Z"
-                      ]
+            <g transform="translate(300,100)">
+              {/* Reservoir */}
+              <g>
+                {/*buoy*/}
+                <g transform="translate(-50,80)">
+                  <motion.g
+                    initial={{ y: 220 * (1 - waterLevel / 100) }}
+                    animate={{ 
+                      y: 220 * (1 - waterLevel / 100),
+                      rotate: [-2, 2, -2]
                     }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut"
+                    transition={{ 
+                      y: { 
+                        type: "spring", 
+                        stiffness: 50, 
+                        damping: 12 
+                      },
+                      rotate: {
+                        repeat: Infinity,
+                        duration: 3,
+                        ease: "easeInOut"
+                      }
                     }}
-                  />
+                  >
+                    {/* Storage percentage */}
+                    <g transform="translate(-65,-17)">
+                      <foreignObject x="-150" y="-10" width="200" height="24">
+                        <div className="text-right" style={{ width: '100%', height: '100%' }}>
+                          <AnimatedNumber
+                            value={waterLevel}
+                            decimals={1}
+                            suffix="%"
+                            className="text-2xl font-medium"
+                          />
+                        </div>
+                      </foreignObject>
+                    </g>
 
-                  {/* Flow lines animation */}
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <motion.path
-                      key={`flow-${i}`}
-                      d={`M0,${210 + i * 8} Q150,${190 + i * 8} 300,${210 + i * 8} T600,${210 + i * 8}`}
-                      stroke="#ffffff"
-                      strokeWidth="2"
-                      fill="none"
-                      opacity="0.4"
-                      strokeDasharray="10,5"
+                    {/* Reflection buoy */}
+                    <motion.g
+                      transform={`translate(0,35)`}
                       animate={{
-                        strokeDashoffset: [0, -15]
+                        scale: [1, 0.98, 1],
+                        opacity: [0.08, 0.06, 0.08],
+                        rotate: [-1, 1, -1]
                       }}
                       transition={{
-                        duration: 2 + i * 0.2,
-                        repeat: Infinity,
-                        ease: "linear"
+                        scale: {
+                          repeat: Infinity,
+                          duration: 2,
+                          ease: "easeInOut"
+                        },
+                        opacity: {
+                          repeat: Infinity,
+                          duration: 2,
+                          ease: "easeInOut"
+                        },
+                        rotate: {
+                          repeat: Infinity,
+                          duration: 3,
+                          ease: "easeInOut"
+                        }
                       }}
-                    />
-                  ))}
-
-                  {/* River gauge station */}
-                  <g transform="translate(300,180)">
-                    {/* Gauge post */}
-                    <rect
-                      x="-5"
-                      y="-20"
-                      width="10"
-                      height="60"
-                      fill="#666"
-                    />
-                    
-                    {/* Gauge markings */}
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <line
-                        key={`gauge-mark-${i}`}
-                        x1="5"
-                        y1={-10 + i * 8}
-                        x2="10"
-                        y2={-10 + i * 8}
-                        stroke="#333"
-                        strokeWidth="1"
+                    >
+                      <image
+                        href="/buoy.webp"
+                        x="-20"
+                        y="-2"
+                        width="40"
+                        height="40"
+                        opacity="0.08"
+                        transform="scale(1, -0.85) translate(0, -15)"
+                        style={{ filter: 'blur(2.5px)' }}
                       />
-                    ))}
+                    </motion.g>
 
-                    {/* Water level indicator */}
-                    <motion.circle
-                      cx="0"
-                      cy={20 - (waterLevel / 100) * 40}
-                      r="8"
-                      fill="#FF4444"
+                    {/* Main buoy */}
+                    <image
+                      href="/buoy.webp"
+                      x="-20"
+                      y="-32"
+                      width="40"
+                      height="40"
+                    />
+
+                    {/* Buoy navigation light */}
+                    <motion.g
                       animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.8, 1, 0.8]
+                        opacity: [0.2, 1, 0.2],
+                        scale: [0.8, 1.3, 0.8]
                       }}
                       transition={{
                         duration: 2,
-                        repeat: Infinity
+                        repeat: Infinity,
+                        ease: "easeInOut"
                       }}
-                    />
+                    >
+                      <circle
+                        cx="0"
+                        cy="-28"
+                        r="6"
+                        fill="url(#buoy-light-glow)"
+                      />
+                      <circle
+                        cx="0"
+                        cy="-28"
+                        r="2"
+                        fill="#FF0000"
+                      />
+                    </motion.g>
 
-                    {/* Gauge level display */}
-                    <g transform="translate(-80,-30)">
-                      <foreignObject x="-50" y="-10" width="100" height="24">
+                    {/* Water level measurement */}
+                    <g transform="translate(22,-17)">
+                      <foreignObject x="-30" y="-10" width="150" height="24">
                         <div className="text-center" style={{ width: '100%', height: '100%' }}>
                           <AnimatedNumber
                             value={parseFloat(currentData?.waterLevel || '0')}
                             decimals={2}
-                            suffix=" ft"
-                            className="text-lg font-medium"
+                            suffix="m"
+                            className="text-2xl font-medium"
                           />
                         </div>
                       </foreignObject>
-                      <text x="0" y="20" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="12">
-                        Gauge Height
-                      </text>
                     </g>
-                  </g>
+                  </motion.g>
+                </g>
 
-                  {/* Trees along banks */}
-                  {[50, 120, 180, 420, 480, 550].map((x, i) => (
-                    <g key={`tree-${i}`} transform={`translate(${x},${i % 2 === 0 ? 140 : 260})`}>
-                      {/* Tree trunk */}
-                      <rect x="-3" y="0" width="6" height="20" fill="#8B4513" />
-                      {/* Tree foliage */}
-                      <circle cx="0" cy="-5" r="12" fill="#228B22" opacity="0.8" />
-                      <circle cx="-5" cy="-8" r="8" fill="#32CD32" opacity="0.6" />
-                      <circle cx="5" cy="-8" r="8" fill="#32CD32" opacity="0.6" />
-                    </g>
-                  ))}
+                {/* Water area on top */}
+                <motion.rect
+                  x="-300"
+                  initial={{ y: 80 + (220 * (1 - waterLevel / 100)), height: 220 * (waterLevel / 100) }}
+                  animate={{ y: 80 + (220 * (1 - waterLevel / 100)), height: 220 * (waterLevel / 100) }}
+                  transition={{ type: "spring", stiffness: 50, damping: 15 }}
+                  width="420"
+                  fill="url(#water-gradient)"
+                  rx="0 12 12 0"
+                />
+                <g transform="translate(120,80)">
+                  {/* Penstock pipe connecting spillway to dam */}
+                  <path d="M90 200,
+                                           60 180"
+                    stroke="hsl(var(--dam-structure-dark))"
+                    strokeWidth="8"
+                    fill="none"
+                    opacity="0.9" />
+                </g>
+                
+                {/* Spillway struct behind dam */}
+                <g transform="translate(210,260)">
+                  <path d="M6 10
+                                              L-13 40
+                                              L80 40
+                                              60 10
+                                              Z"
+                    fill="hsl(var(--dam-structure))"
+                    opacity="0.5" />
+                </g>
 
-                  {/* Rocks in river */}
-                  {[180, 350, 420].map((x, i) => (
-                    <ellipse
-                      key={`rock-${i}`}
-                      cx={x}
-                      cy={225 + i * 5}
-                      rx="8"
-                      ry="5"
-                      fill="#696969"
-                      opacity="0.7"
-                    />
-                  ))}
-                </>
-              ) : (
-                // EXISTING DAM VISUALIZATION
-                <>
-                  {/* Reservoir */}
-                  <g>
-                    {/*buoy*/}
-                    <g transform="translate(-50,80)">
-                      <motion.g
-                        initial={{ y: 220 * (1 - waterLevel / 100) }}
-                        animate={{ 
-                          y: 220 * (1 - waterLevel / 100),
-                          rotate: [-2, 2, -2]
-                        }}
-                        transition={{ 
-                          y: { 
-                            type: "spring", 
-                            stiffness: 50, 
-                            damping: 12 
-                          },
-                          rotate: {
-                            repeat: Infinity,
-                            duration: 3,
-                            ease: "easeInOut"
-                          }
-                        }}
-                      >
-                        {/* Storage percentage */}
-                        <g transform="translate(-65,-17)">
-                          <foreignObject x="-150" y="-10" width="200" height="24">
-                            <div className="text-right" style={{ width: '100%', height: '100%' }}>
-                              <AnimatedNumber
-                                value={waterLevel}
-                                decimals={1}
-                                suffix="%"
-                                className="text-2xl font-medium"
-                              />
-                            </div>
-                          </foreignObject>
-                        </g>
+                {/* Dam Structure */}
+                <g transform="translate(120,80)">
+                  {/* Main dam wall */}
+                  <path d="M-2 0 
+                           L-8 220 
+                           L90 220 
+                           L15 0 
+                           Z"
+                    fill="hsl(var(--dam-structure))" />
 
-                        {/* Main buoy */}
-                        <image
-                          href="/buoy.webp"
-                          x="-20"
-                          y="-32"
-                          width="40"
-                          height="40"
+                  {/*  Spillway opening/anim */}
+                  <g transform="translate(90,180)">
+                    {/* Circular openings - closer together */}
+                    {[25, 45].map((x, i) => (
+                      <g key={`spillway-opening-${i}`}>
+                        <circle
+                          cx={x}
+                          cy="25"
+                          r="5"
+                          fill="hsl(var(--dam-structure-dark))"
+                          opacity="0.9"
                         />
+                        <circle
+                          cx={x}
+                          cy="25"
+                          r="4"
+                          fill="gray"
+                          stroke="hsl(var(--dam-structure-dark))"
+                          strokeWidth="2"
+                          opacity="0.9"
+                        />
+                      </g>
+                    ))}
 
-                        {/* Water level measurement */}
-                        <g transform="translate(22,-17)">
-                          <foreignObject x="-30" y="-10" width="150" height="24">
-                            <div className="text-center" style={{ width: '100%', height: '100%' }}>
-                              <AnimatedNumber
-                                value={parseFloat(currentData?.waterLevel || '0')}
-                                decimals={2}
-                                suffix="m"
-                                className="text-2xl font-medium"
-                              />
-                            </div>
-                          </foreignObject>
-                        </g>
-                      </motion.g>
-                    </g>
-
-                    {/* Water area */}
-                    <motion.rect
-                      x="-300"
-                      initial={{ y: 80 + (220 * (1 - waterLevel / 100)), height: 220 * (waterLevel / 100) }}
-                      animate={{ y: 80 + (220 * (1 - waterLevel / 100)), height: 220 * (waterLevel / 100) }}
-                      transition={{ type: "spring", stiffness: 50, damping: 15 }}
-                      width="420"
-                      fill="url(#water-gradient)"
-                      rx="0 12 12 0"
-                    />
-
-                    {/* Dam Structure and other existing elements... */}
-                    {/* (keeping existing dam visualization for space) */}
+                    {/* Spillway water flow */}
+                    {currentData?.spillwayRelease > 0 && (
+                      <g>
+                        {/* Round outlet flows */}
+                        {[25, 45].map((x, i) => (
+                          <motion.path
+                            key={`spillway-flow-${i}`}
+                            d={`M${x} 24
+                                L${x} 40`}
+                            stroke="hsl(var(--dam-water))"
+                            strokeWidth="6"
+                            fill="none"
+                            opacity="0.6"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{
+                              duration: 0.8,
+                              repeat: 0,
+                              ease: "linear"
+                            }}
+                          />
+                        ))}
+                      </g>
+                    )}
                   </g>
-                </>
-              )}
 
-              {/* Data displays - adjusted for river vs dam */}
+                  {/* bottom bar */}
+                  <rect x="-15" y="210"
+                    width="110" height="15"
+                    fill="hsl(var(--dam-structure))" />
+                  <g>
+                    {/* Power house penstock*/}
+                    <path d="M-7 200 
+                             L30 205
+                             L50 208"
+                      stroke="hsl(var(--dam-structure-dark))"
+                      strokeWidth="8"
+                      fill="none"
+                      opacity="0.9" />
+
+                    {/* Power house water flow anim */}
+                    {currentData?.powerHouseDischarge > 0 && (
+                      <motion.path
+                        d="M-7 200 
+                             L30 205
+                             L50 208"
+                        stroke="hsl(var(--dam-water))"
+                        strokeWidth="4"
+                        fill="none"
+                        initial={{ opacity: 0, pathLength: 0 }}
+                        animate={{ opacity: 0.6, pathLength: 1 }}
+                        transition={{
+                          opacity: { duration: 0.2 },
+                          pathLength: { duration: 1, repeat: 0 }
+                        }}
+                      />
+                    )}
+
+                    {/* Power house structure */}
+                    <g transform="translate(45,200)">
+                      {/* Power house building */}
+                      <path d="M 0 0 
+                               L 25 0 
+                               L 25 20 
+                               L 0 20 Z"
+                        fill="hsl(var(--dam-building))"
+                        opacity="0.95" />
+
+                      {/* top of building */}
+                      <path d="M 0 0 
+                             L 25 0 
+                             L 25 2 
+                             L 0 2 Z"
+                        fill="hsl(var(--dam-structure-dark))"
+                        opacity="0.9" />
+
+                      {/*  windows */}
+                      <rect x="2" y="5"
+                        width="6" height="12"
+                        fill="hsl(var(--dam-window))"
+                        opacity="var(--dam-window-opacity)" />
+                      <rect x="10" y="5"
+                        width="6" height="12"
+                        fill="hsl(var(--dam-window))"
+                        opacity="var(--dam-window-opacity)" />
+                      <rect x="18" y="5"
+                        width="4" height="12"
+                        fill="hsl(var(--dam-window))"
+                        opacity="var(--dam-window-opacity)" />
+
+                      {/* Turbine  */}
+                      <g transform="translate(12.5,11) scale(0.9)">
+                        {currentData?.powerHouseDischarge > 0 ? (
+                          <>
+                            {/* Rotating */}
+                            <g>
+                              <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0"
+                                to="360"
+                                dur={`${Math.max(0.1, 2 - (currentData.powerHouseDischarge / 50))}s`}
+                                repeatCount="indefinite" />
+
+                              {/*  turbine blades */}
+                              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+                                <path
+                                  key={`turbine-blade-${i}`}
+                                  d={`M 0 0 
+                                         L ${6 * Math.cos((angle - 20) * Math.PI / 180)} ${6 * Math.sin((angle - 20) * Math.PI / 180)}
+                                         A 8 8 0 0 1 ${6 * Math.cos((angle + 20) * Math.PI / 180)} ${6 * Math.sin((angle + 20) * Math.PI / 180)}
+                                         Z`}
+                                  fill="hsl(var(--dam-structure-dark))"
+                                  opacity="0.9"
+                                  transform={`rotate(${angle})`}
+                                />
+                              ))}
+                            </g>
+
+                            {/* Inner hub */}
+                            <circle r="3.5"
+                              fill="hsl(var(--dam-structure-dark))"
+                              opacity="0.9" />
+
+                            {/* Center dot */}
+                            <circle r="1"
+                              fill="hsl(var(--dam-structure-light))"
+                              opacity="0.9" />
+                          </>
+                        ) : (
+                          <>
+                            {/* Static inner hub */}
+                            <circle r="3.5"
+                              fill="hsl(var(--dam-structure-dark))"
+                              opacity="0.7" />
+
+                            {/* Static center dot */}
+                            <circle r="1"
+                              fill="hsl(var(--dam-structure-light))"
+                              opacity="0.7" />
+                          </>
+                        )}
+                      </g>
+                    </g>
+                  </g>
+
+                  {/* Dam Top box */}
+                  <path d="M -2 -5 L 20 -5 L 18 5 L -2 5 Z" fill="hsl(var(--dam-structure))" />
+
+                  {/* Street light */}
+                  <g transform="translate(12,-5)">
+                    {/* Light pole */}
+                    <rect 
+                      x="-1" 
+                      y="-15" 
+                      width="2" 
+                      height="15" 
+                      fill="hsl(var(--dam-structure-dark))"
+                      opacity="0.9"
+                    />
+                    {/* Light fixture */}
+                    <path 
+                      d="M-3 -15 L3 -15 L2 -12 L-2 -12 Z" 
+                      fill={theme === 'dark' ? 'yellow' : 'hsl(var(--dam-structure-dark))'}
+                      opacity="0.9"
+                      stroke="gray"
+                      strokeWidth="0.5"
+                    />
+                  </g>
+
+                  {/* line below house */}
+                  <rect x="-4" y="5"
+                    width="23" height="4"
+                    fill="hsl(var(--dam-structure-dark))"
+                    opacity="0.9" />
+
+                  {/* maintenance building */}
+                  <path d="M -10 -8 L -2 -8 L -2 3 L -10 0 Z" fill="hsl(var(--dam-building))" opacity="0.95" />
+                  <path d="M-11 -8 L-6 -13 L-1 -8"
+                    fill="hsl(var(--dam-structure-dark))"
+                    stroke="hsl(var(--dam-structure-dark))"
+                    strokeWidth="1"
+                    opacity="0.9" />
+
+                  {/* Building window */}
+                  <rect x="-8" y="-6"
+                    width="4" height="3"
+                    fill="hsl(var(--dam-window))"
+                    opacity="var(--dam-window-opacity)" />
+                </g>
+              </g>
+
+              {/* Right side cards */}
               <g transform="translate(280,0)">
                 <g transform="translate(0,130)">
                   <text x="5" y="30"
                     fill="hsl(var(--foreground))"
                     fontSize="14"
                     fontWeight="500">
-                    {isRiver ? 'Current Flow' : 'Spillway Discharge'}
+                    Spillway Discharge
                   </text>
                   <foreignObject x="5" y="35" width="130" height="30">
                     <div className="text-2xl font-medium">
                       <AnimatedNumber
-                        value={parseFloat(currentData?.spillwayRelease || currentData?.totalOutflow || '0')}
+                        value={parseFloat(currentData?.spillwayRelease || '0')}
                         decimals={0}
                         suffix=" CFS"
                       />
@@ -675,28 +822,26 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
                   </foreignObject>
                 </g>
 
-                {!isRiver && (
-                  <g transform="translate(0,220)">
-                    <text x="5" y="30"
-                      fill="hsl(var(--foreground))"
-                      fontSize="14"
-                      fontWeight="500">
-                      Power H. Discharge
-                    </text>
-                    <foreignObject x="5" y="35" width="130" height="30">
-                      <div className="text-2xl font-medium">
-                        <AnimatedNumber
-                          value={parseFloat(currentData?.powerHouseDischarge || '0')}
-                          decimals={0}
-                          suffix=" CFS"
-                        />
-                      </div>
-                    </foreignObject>
-                  </g>
-                )}
+                <g transform="translate(0,220)">
+                  <text x="5" y="30"
+                    fill="hsl(var(--foreground))"
+                    fontSize="14"
+                    fontWeight="500">
+                    Power H. Discharge
+                  </text>
+                  <foreignObject x="5" y="35" width="130" height="30">
+                    <div className="text-2xl font-medium">
+                      <AnimatedNumber
+                        value={parseFloat(currentData?.powerHouseDischarge || '0')}
+                        decimals={0}
+                        suffix=" CFS"
+                      />
+                    </div>
+                  </foreignObject>
+                </g>
               </g>
 
-              {/* Input data */}
+              {/* Input */}
               <g transform="translate(-290,0)">
                 <g transform="translate(0,-30)">
                   <text x="0" y="-45"
@@ -721,7 +866,7 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
                     fill="hsl(var(--foreground))"
                     fontSize="14"
                     fontWeight="500">
-                    {isRiver ? 'Upstream Flow' : 'Inflow'}
+                    Inflow
                   </text>
                   <foreignObject x="20" y="35" width="130" height="30">
                     <div className="text-2xl font-medium">
@@ -736,8 +881,6 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
               </g>
             </g>
           </svg>
-          
-          {/* Rainfall animation overlay */}
           {hasRainfall && (
             <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
               {raindrops.map((drop) => (
@@ -755,8 +898,6 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
             </div>
           )}
         </div>
-        
-        {/* Navigation controls (same for both) */}
         <div className="px-6 pt-4 flex items-center justify-center gap-4">
           <Button
             variant="outline"
@@ -801,8 +942,6 @@ export function Visualization({ data, currentIndex, onIndexChange, damData }: Vi
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        
-        {/* Slider controls (same for both) */}
         <div className="px-6 pb-8 pt-5 overflow-hidden">
           <div className="relative mx-4">
             <Slider
