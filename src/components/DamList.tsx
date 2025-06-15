@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowUpDown } from "lucide-react";
+import { Search, ArrowUpDown, ChevronRight, Info } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -300,6 +300,12 @@ const getAlertLabel = (alertStatus: string) => {
               </Tooltip>
             </div>
           </div>
+          
+          {/* Global info message */}
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-lg border border-border/50">
+            <Info className="h-3 w-3" />
+            <span>Click any dam for detailed information and historical data</span>
+          </div>
         </CardHeader>
         <ScrollArea className="flex-1">
           <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
@@ -350,12 +356,22 @@ const getAlertLabel = (alertStatus: string) => {
                             {getAlertLabel(alertStatus).text}
                           </div>
                         </div>
-                        <CardContent className="p-4 sm:p-5">
+                        
+                        {/* Chevron indicator for more info */}
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+                          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors duration-300" />
+                        </div>
+                        
+                        <CardContent className="p-4 sm:p-5 pr-10">
                           <div className="flex justify-between items-start gap-4 min-w-0 mt-4">
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-semibold text-sm sm:text-base truncate pr-2  transition-colors duration-300">{dam.name}</h3>
+                              <h3 className="font-semibold text-sm sm:text-base truncate pr-2 transition-colors duration-300">{dam.name}</h3>
                               <p className="text-xs sm:text-sm text-muted-foreground/80 truncate mt-0.5">
                                 {formatValue(dam.data[0]?.waterLevel, "waterLevel")}
+                              </p>
+                              {/* "Press for more" hint */}
+                              <p className="text-xs text-primary/70 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                Press for more info →
                               </p>
                             </div>
                             <div className="text-right shrink-0">
