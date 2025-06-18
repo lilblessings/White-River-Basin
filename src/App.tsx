@@ -8,6 +8,7 @@ import { Footer } from "@/components/ui/footer";
 import Index from "./pages/Index";
 import DamDetail from "./pages/DamDetail";
 import NotFound from "./pages/NotFound";
+import ConsentOptIn from "./pages/ConsentOptIn";
 
 const queryClient = new QueryClient();
 
