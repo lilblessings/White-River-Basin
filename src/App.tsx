@@ -22,6 +22,7 @@ const App = () => (
             <div className="flex-1 overflow-hidden">
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/consent" element={<ConsentOptIn />} />
                 <Route path="/:name" element={<DamDetail />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
